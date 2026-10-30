@@ -46,3 +46,16 @@ def test_cli_json_flow(tmp_path: Path) -> None:
 )
 def test_offline_demo_end_to_end(tmp_path: Path) -> None:
     assert run_demo(tmp_path / "demo")
+
+
+def test_mcp_server_is_read_only(tmp_path: Path) -> None:
+    pytest.importorskip("mcp")
+    import asyncio
+
+    from conftest import settings_for
+    from skill_foundry.mcp.server import build_server
+
+    server = build_server(settings_for(tmp_path / "sf"))
+    names = {t.name for t in asyncio.run(server.list_tools())}
+    assert names == {"list_candidates", "list_hypotheses", "version_lineage", "evaluation_reports"}
+    assert not any(w in n for n in names for w in ("approve", "publish", "install", "rollback"))

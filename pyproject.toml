@@ -30,7 +30,7 @@ dependencies = [
 [project.optional-dependencies]
 anthropic = ["anthropic>=0.60"]
 embeddings = ["fastembed>=0.7,<0.10"]
-mcp = ["mcp>=1.10"]
+mcp = ["mcp>=2.0,<3"]
 
 [project.scripts]
 sf = "skill_foundry.cli.app:main"

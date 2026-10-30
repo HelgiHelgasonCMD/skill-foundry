@@ -1,0 +1,12 @@
+# Optional Qdrant server. Skill Foundry uses embedded Qdrant by default; point it at
+# this server with SF_QDRANT_URL=http://localhost:6333. The index is derived from
+# SQLite and can be rebuilt at any time (`sf index rebuild`).
+services:
+  qdrant:
+    image: qdrant/qdrant:v1.20.0
+    ports:
+      - "127.0.0.1:6333:6333"
+    volumes:
+      - qdrant_storage:/qdrant/storage
+volumes:
+  qdrant_storage:

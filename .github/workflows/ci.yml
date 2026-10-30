@@ -1,0 +1,68 @@
+name: ci
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        python: ["3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install bubblewrap
+        run: |
+          sudo apt-get update && sudo apt-get install -y bubblewrap
+          # Ubuntu 24.04 restricts unprivileged user namespaces via AppArmor.
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 || true
+      - run: uv sync --all-extras --locked
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run mypy
+      - run: uv run pytest -q
+      - name: Offline demo (acceptance path)
+        run: uv run sf demo --workdir "$RUNNER_TEMP/demo"
+
+  qdrant-server:
+    runs-on: ubuntu-24.04
+    services:
+      qdrant:
+        image: qdrant/qdrant:v1.20.0
+        ports: ["6333:6333"]
+    env:
+      SF_QDRANT_URL: http://localhost:6333
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - run: uv sync --all-extras --locked
+      - name: Wait for Qdrant
+        run: for i in $(seq 30); do curl -sf localhost:6333/readyz && break; sleep 1; done
+      - run: uv run pytest -q -m qdrant_server tests/test_qdrant_server.py
+
+  docker-sandbox:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - run: docker build -t skill-foundry-verifier:1 -f docker/verifier.Dockerfile docker
+      - run: uv sync --all-extras --locked
+      - run: uv run pytest -q -m docker tests/test_docker_sandbox.py
+
+  fastembed:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - run: uv sync --all-extras --locked
+      - run: uv run pytest -q -m fastembed tests/test_fastembed.py

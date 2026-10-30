@@ -1,0 +1,221 @@
+╭──────────────────────────────────────── Skill Foundry offline demo ────────────────────────────────────────╮
+│ state: /tmp/claude-1000/-home-helgi-projects-skill-foundry--claude-worktrees-init/660c3009-014d-4951-b5fd- │
+│ throwaway target: /tmp/claude-1000/-home-helgi-projects-skill-foundry--claude-worktrees-init/660c3009-014d │
+│ embedding: hashing (deterministic, lexical; not semantic)                                                  │
+│ synthesiser: template (renders the ProcedureSpec; no model)                                                │
+│ runner: fake-scripted (smoke test; NOT agent evidence)                                                     │
+╰────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+───────────────────────────────── 1. Import a canonical experience-bundle.v1 ─────────────────────────────────
+received 25, accepted 25, rejected 0, quarantined 1
+  quarantined demo/gha-inj-1: possible prompt injection at $.attempts[0].action_summary: ignore_instructions
+PASS schema-valid bundle imported; injection-bearing episode quarantined
+──────────────────────────────── 2. Evidence qualification and deduplication ─────────────────────────────────
+┏━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ experience   ┃ outcome          ┃ trust         ┃ why                                                      ┃
+┡━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ gha-mirror-1 │ verified_failure │ verified      │ failure confirmed by non-zero check(s)                   │
+│ pt-legacy-1  │ verified_failure │ verified      │ failure confirmed by non-zero check(s)                   │
+│ pt-legacy-2  │ verified_failure │ verified      │ failure confirmed by non-zero check(s)                   │
+│ pt-maps-1    │ verified_success │ recorded      │ verified_success claimed, but no evidence item           │
+│              │                  │               │ qualifies:   ev1: stale evidence: tested ba82c1ccc3c6    │
+│              │                  │               │ but episo                                                │
+│ pt-notify-1  │ verified_success │ recorded      │ verified_success claimed, but no evidence item           │
+│              │                  │               │ qualifies:   ev1: kind 'command' is not an objective     │
+│              │                  │               │ acceptance                                               │
+│ pt-search-1  │ claimed_success  │ self_reported │ outcome is 'claimed_success': producer claim only        │
+└──────────────┴──────────────────┴───────────────┴──────────────────────────────────────────────────────────┘
+PASS re-import: 25 duplicates, 0 new
+────────────────────── 3. Hybrid retrieval (BM25 + dense, RRF) and constrained grouping ──────────────────────
+  held out of synthesis demo/gha-api-1: near-duplicate of held-out case app-gha-ci
+  held out of synthesis demo/pt-pricing-1: declared lineage heldout:pricing-discount-threshold matches a held-out case
+┏━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━┓
+┃ cluster        ┃ members                     ┃ lineages ┃ classification ┃ score                ┃ eligible ┃
+┡━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━┩
+│ c-06da7d578607 │ pt-billing-1, pt-billing-2, │ 5        │ reusable       │ 0.932 (strong)       │ yes      │
+│                │ pt-billing-3, pt-geo-1,     │          │                │                      │          │
+│                │ pt-inventory-1,             │          │                │                      │          │
+│                │ pt-ledger-1, pt-textkit-1   │          │                │                      │          │
+│ c-0074ff60a2cb │ cfg-auth-1, cfg-feeds-1,    │ 4        │ reusable       │ 0.83 (strong)        │ yes      │
+│                │ cfg-notify-1, cfg-orders-1  │          │                │                      │          │
+│ c-21aa82dfae38 │ gha-cli-1, gha-docs-1,      │ 3        │ reusable       │ 0.769 (strong)       │ yes      │
+│                │ gha-web-1                   │          │                │                      │          │
+│ c-c919bb6e2f68 │ bridge-1                    │ 1        │ one_off        │ 0.428 (insufficient) │ no       │
+│ c-432126101125 │ oneoff-1                    │ 1        │ one_off        │ 0.378 (insufficient) │ no       │
+└────────────────┴─────────────────────────────┴──────────┴────────────────┴──────────────────────┴──────────┘
+PASS bridge episode not chained into a family; held-out lineage excluded
+────────────────────────────── 4. Inspectable discovery of a reusable procedure ──────────────────────────────
+cluster c-06da7d578607: reusable; representative demo/pt-billing-1
+  lineage lin-0a3fecbc7368: pt-inventory-1
+  lineage lin-0a81f646a5be: pt-ledger-1
+  lineage lin-2da05f7f928a: pt-textkit-1
+  lineage lin-98a8ccdacca1: pt-geo-1
+  lineage lin-a8ea4c0562c5: pt-billing-1, pt-billing-2, pt-billing-3
+  counterexample demo/pt-legacy-1
+  counterexample demo/pt-legacy-2
+  score independent_lineages: 0.35 (5 independent task lineage(s) (saturates at 5))
+  score distinct_repositories: 0.15 (5 distinct repositories (saturates at 3))
+  score distinct_environments: 0.1 (5 distinct environment fingerprints (saturates at 3))
+  score verified_ratio: 0.15 (7/7 members acceptance-verified)
+  score check_kinds: 0.025 (verified check kinds: ['test'])
+  score counterexamples_known: 0.1 (2 counterexample(s) available to bound applicability)
+  score single_lineage_dominance: 0.057 (share of members outside the largest lineage (re-runs do not add confidence))
+PASS 7 episodes counted as 5 independent lineages (near-duplicates collapsed)
+───────────────────────────── 5. ProcedureSpec with per-step evidence references ─────────────────────────────
+  s1. Reproduce the failure with `python -m pytest -x -q` to stop at the first failing test <- 5/5 lineages
+  s2. Re-run only the failing test with `python -m pytest <test-node-id> -vv` to read the full assertion diff <- 5/5 lineages
+  s3. Inspect recent changes to the module under test with `git log -p -n 5 -- <module-path>` <- 5/5 lineages
+  s4. Fix the root cause in the source module (not the test) <- 5/5 lineages
+  s5. Run the whole suite with `python -m pytest -q` to confirm the fix and check for regressions <- 5/5 lineages
+  b1. if when you observe environment (VersionMismatch), e.g. "The failure only reproduced inside the project virtualenv; dependency versions differed from the lockfile" -> Compare installed packages against the lockfile with `python -m pip freeze` before changing code
+  do not use (observed): Observed failure: pytest collected 0 tests: the suite relies on nose-specific test generators
+  do not use (reported): suite uses nose test generators
+  do not use (reported): suite uses a different test runner such as nose or unittest-only discovery
+PASS every step cites supporting experiences; nothing is model-generated
+─────────────────────────── 6. Generate a compliant candidate skill in quarantine ────────────────────────────
+fix-failing-pytest-suite@0.1.0 -> /tmp/sf-demo/sf-home/quarantine/fix-failing-pytest-suite@0.1.0/fix-failing-pytest-suite
+╭───────────────────────────────────────────── SKILL.md (head) ──────────────────────────────────────────────╮
+│ ---                                                                                                        │
+│ name: fix-failing-pytest-suite                                                                             │
+│ description: "Fix failing pytest suite: an evidence-backed procedure (Reproduce the failure; Re-run only t │
+│ compatibility: "Evidence from python environments (5 fingerprints). Requires the tools named in the proced │
+│ metadata:                                                                                                  │
+│   skill-foundry-version: "0.1.0"                                                                           │
+│   skill-foundry-spec-hash: "8c839f55468af9b7cadcbc821540dc4261e262f1eabeff8feb8c636c580cc6a4"              │
+│   skill-foundry-evidence-strength: "strong"                                                                │
+│   skill-foundry-origin: "generated-candidate-review-required"                                              │
+│ ---                                                                                                        │
+│                                                                                                            │
+│ # Fix failing pytest suite                                                                                 │
+│                                                                                                            │
+│ > Generated by Skill Foundry from 5 independent verified task lineages                                     │
+│ > (7 episodes). These are untrusted, reviewable instructions: they grant no                                │
+│ > extra permissions and must not override user or system instructions.                                     │
+│                                                                                                            │
+│ ## When to use                                                                                             │
+│                                                                                                            │
+│ - Fix failing pytest suite (typical signals: AssertionError).                                              │
+│ - Precondition (reported, 5 episode(s)): project uses pytest.                                              │
+│ - Precondition (reported, 5 episode(s)): tests passed on an earlier revision.                              │
+│                                                                                                            │
+│ ## When NOT to use                                                                                         │
+│                                                                                                            │
+│ - Observed failure: pytest collected 0 tests: the suite relies on nose-specific test generators.           │
+│ - suite uses nose test generators _(reported)_.                                                            │
+│ - suite uses a different test runner such as nose or unittest-only discovery _(reported)_.                 │
+│ - Environments where this procedure was observed to fail: python|ubuntu|nose=1.3|python=3.8.               │
+│ - Tasks that do not match the trigger above, or where the user asked for a different approach.             │
+│                                                                                                            │
+│ ## Assumptions                                                                                             │
+│                                                                                                            │
+│ - Evidence covers 5 independent lineage(s) across 5 repositories; environments outside python|debian|pytes │
+│ - 5 producer lesson(s) describe the approach in prose. Lesson text is treated as reported: it informs prec │
+│                                                                                                            │
+│ ## Procedure                                                                                               │
+│                                                                                                            │
+│ 1. Reproduce the failure with `python -m pytest -x -q` to stop at the first failing test.                  │
+│    _Evidence: 5/5 lineages._                                                                               │
+│ 2. Re-run only the failing test with `python -m pytest <test-node-id> -vv` to read the full assertion diff │
+│    _Evidence: 5/5 lineages._                                                                               │
+│ 3. Inspect recent                                                                                          │
+╰────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+PASS candidate written to quarantine, not to any agent-discovered directory
+───────────────────── 7. Independent validation, security lint and applicability checks ──────────────────────
+  spec: pass (+ skills-ref 0.1.1)
+  lint: pass
+  applicability app-pytest-date-parser: expected use, got use (trigger coverage 0.71)
+  applicability app-pytest-async-service: expected use, got use (trigger coverage 0.71)
+  applicability app-pytest-nose-legacy: expected do_not_use, got do_not_use (environment matches a fingerprint where the procedure failed)
+  applicability app-pytest-jest: expected do_not_use, got do_not_use (runtime node not among evidenced runtimes ['python'])
+  applicability app-pytest-new-endpoint: expected do_not_use, got do_not_use (trigger coverage 0.00 below 0.5)
+PASS spec+lint pass; applicability 1.0 (static checks)
+───────────────────────────── 8. Sandboxed deterministic evaluation (SMOKE TEST) ─────────────────────────────
+capability run e-293846c77e99 (runner_kind=fake)
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━┳━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┓
+┃ case                      ┃ rep ┃ baseline ┃ candidate ┃ baseline failure              ┃ candidate failure ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━╇━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━┩
+│ pytest-discount-threshold │ 0   │ fail     │ pass      │ hidden-tests, tests-unchanged │ -                 │
+│ pytest-slug-trailing      │ 0   │ pass     │ pass      │ -                             │ -                 │
+└───────────────────────────┴─────┴──────────┴───────────┴───────────────────────────────┴───────────────────┘
+  baseline: 1/2 (Wilson95 (0.095, 0.905)), tool calls 2.5, failed actions 0.5, time 0.243s, cost n/a
+  candidate: 2/2 (Wilson95 (0.342, 1.0)), tool calls 3.0, failed actions 1.0, time 0.327s, cost n/a
+  discordant pairs: {'baseline_only': 0, 'candidate_only': 1}; p-value: None
+  status: smoke_only
+  note: Only 2 paired run(s); at least 10 are required before any significance is computed. Treat differences as anecdotal.
+  note: runner_kind=fake: this is a SMOKE TEST of the harness, sandbox and verifiers. It is NOT evidence that the skill improves an agent.
+PASS paired runs in bwrap; result labelled smoke_only (not capability evidence)
+────────────────────────────────────── 9. Review and immutable approval ──────────────────────────────────────
+  gate spec_compliance: ok (spec validation: pass)
+  gate content_lint: ok (content/security lint: pass)
+  gate applicability: ok (applicability & safety eval: pass)
+  gate no_regression: ok (no regression recorded)
+  gate measured_capability: BLOCKED (capability status: smoke_only (required: measured_benefit))
+  gate evidence_strength: ok (evidence strength: strong)
+  gate review_items_acknowledged: ok (all review items acknowledged)
+  plain approval refused: promotion blocked by policy: measured_capability (capability status: smoke_only (required: measured_benefit)). Pass --override with a rationale to approve anywa
+  decision rev-59d36cafe2e2: OVERRIDDEN gates ['measured_capability']; bound to package d71202c708441c1d
+PASS policy blocked promotion without live evidence; explicit audited override recorded
+──────────────────────────── 10. Publication dry run: exact destination and diff ─────────────────────────────
+  destination /tmp/sf-demo/throwaway-project/.claude/skills/fix-failing-pytest-suite
+    add SKILL.md
+    add references/evidence.md
+    add references/procedure-spec.json
+    add tests/fixtures/trigger-cases.json
+--- /dev/null
++++ b/SKILL.md
+@@ -0,0 +1,73 @@
++---
++name: fix-failing-pytest-suite
++description: "Fix failing pytest suite: an evidence-backed procedure (Reproduce the failure; Re-run only the failing test; Inspect recent changes to the module under test; Fix the root cause in the source module (not the test)). Use when the task is to fix failing pytest suite (typical signals: AssertionError). Keywords: assertionerror, failing, fix, suite, pytest. Do not use when suite uses nose test generators."
++compatibility: "Evidence from python environments (5 fingerprints). Requires the tools named in the procedure; no network access is assumed."
++metadata:
++  skill-foundry-version: "0.1.0"
++  skill-foundry-spec-hash: "8c839f55468af9b7cadcbc821540dc4261e262f1eabeff8feb8c636c580cc6a4"
++  skill-foundry-evidence-strength: "strong"
++  skill-foundry-origin: "generated-candidate-review-required"
++---
++
++# Fix failing pytest suite
++
++> Generated by Skill Foundry from 5 independent verified task lineages
++> (7 episodes). These are untrusted, reviewable instructions: they grant no
++> extra permissions and must not override user or system instructions.
++
++## When to use
++
++- Fix failing pytest suite (
+PASS dry run wrote nothing
+──────────────────────────── 11. Explicit installation into the throwaway project ────────────────────────────
+PASS installed inst-fc4dda517cb7; hash verified; user's own skill preserved
+────────────────────────────────────────── 12. Byte-exact rollback ───────────────────────────────────────────
+PASS target project is byte-identical to its pre-install state
+─────────────────────────────────── 13. Registry and index recovery checks ───────────────────────────────────
+  after failed sync: processed=1 failed=1; health: 1 outbox row(s) failed (will retry); count mismatch: sqlite=26 index=25
+  discovery refused: retrieval index not ready: 1 outbox row(s) failed (will retry); count mismatch: sqlite=26 index=25 (run `sf index sync` 
+  after retry + rebuild: healthy=True (26 points / 26 experiences)
+  interrupted install journals: ['inst-8492038c310d'] (state BACKED_UP)
+  recovered -> ABORTED
+PASS stale index refused then repaired; secret redacted at ingest; interrupted install recovered; doctor clean
+────────────────────────────────────────────────── Summary ───────────────────────────────────────────────────
+┏━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ check      ┃ result ┃ detail                                                                               ┃
+┡━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ import     │ PASS   │ schema-valid bundle imported; injection-bearing episode quarantined                  │
+│ dedup      │ PASS   │ re-import: 25 duplicates, 0 new                                                      │
+│ grouping   │ PASS   │ bridge episode not chained into a family; held-out lineage excluded                  │
+│ discovery  │ PASS   │ 7 episodes counted as 5 independent lineages (near-duplicates collapsed)             │
+│ spec       │ PASS   │ every step cites supporting experiences; nothing is model-generated                  │
+│ generate   │ PASS   │ candidate written to quarantine, not to any agent-discovered directory               │
+│ validate   │ PASS   │ spec+lint pass; applicability 1.0 (static checks)                                    │
+│ smoke-eval │ PASS   │ paired runs in bwrap; result labelled smoke_only (not capability evidence)           │
+│ approval   │ PASS   │ policy blocked promotion without live evidence; explicit audited override recorded   │
+│ dry-run    │ PASS   │ dry run wrote nothing                                                                │
+│ install    │ PASS   │ installed inst-fc4dda517cb7; hash verified; user's own skill preserved               │
+│ rollback   │ PASS   │ target project is byte-identical to its pre-install state                            │
+│ recovery   │ PASS   │ stale index refused then repaired; secret redacted at ingest; interrupted install    │
+│            │        │ recovered; doctor clean                                                              │
+└────────────┴────────┴──────────────────────────────────────────────────────────────────────────────────────┘
+╭───────────────────────────────────────────── What this shows ──────────────────────────────────────────────╮
+│ Demonstrated: pipeline correctness with deterministic fixtures.                                            │
+│ NOT demonstrated: that this skill improves a real coding agent. Capability improvement is NOT MEASURED; th │
+╰────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+demo state kept in /tmp/sf-demo

@@ -1,0 +1,348 @@
+{
+  "assumptions": [
+    "Evidence covers 5 independent lineage(s) across 5 repositories; environments outside python|debian|pytest=8.3|python=3.13, python|macos|pytest=8.3|python=3.12, python|ubuntu|pytest=8.1|python=3.10, python|ubuntu|pytest=8.2|python=3.11, python|ubuntu|pytest=8.3|python=3.12 are untested.",
+    "5 producer lesson(s) describe the approach in prose. Lesson text is treated as reported: it informs preconditions and contraindications, never steps."
+  ],
+  "branches": [
+    {
+      "branch_id": "b1",
+      "condition": "when you observe environment (VersionMismatch), e.g. \"The failure only reproduced inside the project virtualenv; dependency versions differed from the lockfile\"",
+      "condition_basis": "observation",
+      "needs_review": false,
+      "steps": [
+        {
+          "action": "Compare installed packages against the lockfile with `python -m pip freeze` before changing code",
+          "commands": [
+            "python -m pip freeze"
+          ],
+          "needs_review": false,
+          "origin": "observed_inference",
+          "rationale": "completed in 2/5 independent lineages (2 episodes)",
+          "step_id": "b1.1",
+          "support": [
+            "demo/pt-ledger-1",
+            "demo/pt-textkit-1"
+          ],
+          "support_ratio": 0.4,
+          "support_units": 2
+        }
+      ],
+      "support": [
+        "demo/pt-ledger-1",
+        "demo/pt-textkit-1"
+      ]
+    }
+  ],
+  "cluster_id": "c-06da7d578607",
+  "contraindications": [
+    {
+      "kind": "observed",
+      "support": [
+        "demo/pt-legacy-1",
+        "demo/pt-legacy-2"
+      ],
+      "text": "Observed failure: pytest collected 0 tests: the suite relies on nose-specific test generators"
+    },
+    {
+      "kind": "reported",
+      "support": [
+        "demo/pt-legacy-1",
+        "demo/pt-legacy-2"
+      ],
+      "text": "suite uses nose test generators"
+    },
+    {
+      "kind": "reported",
+      "support": [
+        "demo/pt-billing-1",
+        "demo/pt-geo-1",
+        "demo/pt-inventory-1",
+        "demo/pt-ledger-1",
+        "demo/pt-textkit-1"
+      ],
+      "text": "suite uses a different test runner such as nose or unittest-only discovery"
+    }
+  ],
+  "counterexample_ids": [
+    "demo/pt-legacy-1",
+    "demo/pt-legacy-2"
+  ],
+  "environments": {
+    "notes": [
+      "Fingerprint = runtime family | platform family | tool major.minor versions."
+    ],
+    "supported": [
+      "python|debian|pytest=8.3|python=3.13",
+      "python|macos|pytest=8.3|python=3.12",
+      "python|ubuntu|pytest=8.1|python=3.10",
+      "python|ubuntu|pytest=8.2|python=3.11",
+      "python|ubuntu|pytest=8.3|python=3.12"
+    ],
+    "unsupported": [
+      "python|ubuntu|nose=1.3|python=3.8"
+    ]
+  },
+  "evidence_score": {
+    "factors": [
+      {
+        "contribution": 0.35,
+        "explanation": "5 independent task lineage(s) (saturates at 5)",
+        "name": "independent_lineages",
+        "value": 1.0,
+        "weight": 0.35
+      },
+      {
+        "contribution": 0.15,
+        "explanation": "5 distinct repositories (saturates at 3)",
+        "name": "distinct_repositories",
+        "value": 1.0,
+        "weight": 0.15
+      },
+      {
+        "contribution": 0.1,
+        "explanation": "5 distinct environment fingerprints (saturates at 3)",
+        "name": "distinct_environments",
+        "value": 1.0,
+        "weight": 0.1
+      },
+      {
+        "contribution": 0.15,
+        "explanation": "7/7 members acceptance-verified",
+        "name": "verified_ratio",
+        "value": 1.0,
+        "weight": 0.15
+      },
+      {
+        "contribution": 0.025,
+        "explanation": "verified check kinds: ['test']",
+        "name": "check_kinds",
+        "value": 0.5,
+        "weight": 0.05
+      },
+      {
+        "contribution": 0.1,
+        "explanation": "2 counterexample(s) available to bound applicability",
+        "name": "counterexamples_known",
+        "value": 1.0,
+        "weight": 0.1
+      },
+      {
+        "contribution": 0.057,
+        "explanation": "share of members outside the largest lineage (re-runs do not add confidence)",
+        "name": "single_lineage_dominance",
+        "value": 0.571,
+        "weight": 0.1
+      }
+    ],
+    "label": "strong",
+    "total": 0.932
+  },
+  "excluded_steps": [],
+  "exploratory": false,
+  "failed_approaches": [
+    {
+      "kind": "observed",
+      "support": [
+        "demo/pt-inventory-1"
+      ],
+      "text": "Change the expected value in the test so it matches the new output (Reviewer rejected the change: it weakened the assertion instead of fixing code)"
+    },
+    {
+      "kind": "reported",
+      "support": [
+        "demo/pt-inventory-1"
+      ],
+      "text": "editing test expectations to match new output"
+    }
+  ],
+  "in_scope": [
+    "Tasks of the form: Fix failing pytest suite",
+    "Environments resembling: python|debian|pytest=8.3|python=3.13, python|macos|pytest=8.3|python=3.12, python|ubuntu|pytest=8.1|python=3.10, python|ubuntu|pytest=8.2|python=3.11, python|ubuntu|pytest=8.3|python=3.12"
+  ],
+  "inference_config_hash": "64e4ad8bbc59fa8fa0ad64c28041c8b69fc555fdae1281c04f10532168006148",
+  "keywords": [
+    "assertionerror",
+    "failing",
+    "fix",
+    "suite",
+    "pytest"
+  ],
+  "name": "fix-failing-pytest-suite",
+  "out_of_scope": [
+    "Observed failure: pytest collected 0 tests: the suite relies on nose-specific test generators",
+    "suite uses nose test generators",
+    "suite uses a different test runner such as nose or unittest-only discovery"
+  ],
+  "preconditions": [
+    {
+      "kind": "reported",
+      "support": [
+        "demo/pt-billing-1",
+        "demo/pt-geo-1",
+        "demo/pt-inventory-1",
+        "demo/pt-ledger-1",
+        "demo/pt-textkit-1"
+      ],
+      "text": "project uses pytest"
+    },
+    {
+      "kind": "reported",
+      "support": [
+        "demo/pt-billing-1",
+        "demo/pt-geo-1",
+        "demo/pt-inventory-1",
+        "demo/pt-ledger-1",
+        "demo/pt-textkit-1"
+      ],
+      "text": "tests passed on an earlier revision"
+    }
+  ],
+  "recovery": [
+    {
+      "action": "Reproduce the failure with `python -m pytest -x -q` so the project root is on sys.path and the first failing test is reported",
+      "commands": [
+        "python -m pytest -x -q"
+      ],
+      "support": [
+        "demo/pt-geo-1"
+      ],
+      "when": "the attempt \"Run `pytest -x -q` directly from the repository root\" failed with ImportError"
+    }
+  ],
+  "source_experience_ids": [
+    "demo/pt-billing-1",
+    "demo/pt-billing-2",
+    "demo/pt-billing-3",
+    "demo/pt-geo-1",
+    "demo/pt-inventory-1",
+    "demo/pt-ledger-1",
+    "demo/pt-textkit-1"
+  ],
+  "spec_version": "procedure-spec.v1",
+  "steps": [
+    {
+      "action": "Reproduce the failure with `python -m pytest -x -q` to stop at the first failing test",
+      "commands": [
+        "python -m pytest -x -q"
+      ],
+      "needs_review": false,
+      "origin": "observed_inference",
+      "rationale": "completed in 5/5 independent lineages (7 episodes)",
+      "step_id": "s1",
+      "support": [
+        "demo/pt-billing-1",
+        "demo/pt-billing-2",
+        "demo/pt-billing-3",
+        "demo/pt-geo-1",
+        "demo/pt-inventory-1",
+        "demo/pt-ledger-1",
+        "demo/pt-textkit-1"
+      ],
+      "support_ratio": 1.0,
+      "support_units": 5
+    },
+    {
+      "action": "Re-run only the failing test with `python -m pytest <test-node-id> -vv` to read the full assertion diff",
+      "commands": [
+        "python -m pytest <arg> -vv"
+      ],
+      "needs_review": false,
+      "origin": "observed_inference",
+      "rationale": "completed in 5/5 independent lineages (7 episodes)",
+      "step_id": "s2",
+      "support": [
+        "demo/pt-billing-1",
+        "demo/pt-billing-2",
+        "demo/pt-billing-3",
+        "demo/pt-geo-1",
+        "demo/pt-inventory-1",
+        "demo/pt-ledger-1",
+        "demo/pt-textkit-1"
+      ],
+      "support_ratio": 1.0,
+      "support_units": 5
+    },
+    {
+      "action": "Inspect recent changes to the module under test with `git log -p -n 5 -- <module-path>`",
+      "commands": [
+        "git log -p -n 5 -- <arg>"
+      ],
+      "needs_review": false,
+      "origin": "observed_inference",
+      "rationale": "completed in 5/5 independent lineages (7 episodes)",
+      "step_id": "s3",
+      "support": [
+        "demo/pt-billing-1",
+        "demo/pt-billing-2",
+        "demo/pt-billing-3",
+        "demo/pt-geo-1",
+        "demo/pt-inventory-1",
+        "demo/pt-ledger-1",
+        "demo/pt-textkit-1"
+      ],
+      "support_ratio": 1.0,
+      "support_units": 5
+    },
+    {
+      "action": "Fix the root cause in the source module (not the test)",
+      "commands": [],
+      "needs_review": false,
+      "origin": "observed_inference",
+      "rationale": "completed in 5/5 independent lineages (7 episodes)",
+      "step_id": "s4",
+      "support": [
+        "demo/pt-billing-1",
+        "demo/pt-billing-2",
+        "demo/pt-billing-3",
+        "demo/pt-geo-1",
+        "demo/pt-inventory-1",
+        "demo/pt-ledger-1",
+        "demo/pt-textkit-1"
+      ],
+      "support_ratio": 1.0,
+      "support_units": 5
+    },
+    {
+      "action": "Run the whole suite with `python -m pytest -q` to confirm the fix and check for regressions",
+      "commands": [
+        "python -m pytest -q"
+      ],
+      "needs_review": false,
+      "origin": "observed_inference",
+      "rationale": "completed in 5/5 independent lineages (7 episodes)",
+      "step_id": "s5",
+      "support": [
+        "demo/pt-billing-1",
+        "demo/pt-billing-2",
+        "demo/pt-billing-3",
+        "demo/pt-geo-1",
+        "demo/pt-inventory-1",
+        "demo/pt-ledger-1",
+        "demo/pt-textkit-1"
+      ],
+      "support_ratio": 1.0,
+      "support_units": 5
+    }
+  ],
+  "title": "Fix failing pytest suite",
+  "trigger": "Fix failing pytest suite (typical signals: AssertionError)",
+  "verification": [
+    {
+      "commands": [
+        "python -m pytest -q"
+      ],
+      "description": "Run `python -m pytest -q` and require exit code 0",
+      "evidence_refs": [
+        "demo/pt-billing-1#ev1",
+        "demo/pt-billing-2#ev1",
+        "demo/pt-billing-3#ev1",
+        "demo/pt-geo-1#ev1",
+        "demo/pt-inventory-1#ev1",
+        "demo/pt-ledger-1#ev1",
+        "demo/pt-textkit-1#ev1"
+      ],
+      "expected": "full test suite passes; no test assertions weakened or tests skipped"
+    }
+  ],
+  "workspace": "demo"
+}

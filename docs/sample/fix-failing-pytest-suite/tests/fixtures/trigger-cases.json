@@ -1,0 +1,11 @@
+{
+  "positive": [
+    "Fix failing pytest suite (typical signals: AssertionError)"
+  ],
+  "negative": [
+    "Observed failure: pytest collected 0 tests: the suite relies on nose-specific test generators",
+    "suite uses nose test generators",
+    "suite uses a different test runner such as nose or unittest-only discovery"
+  ],
+  "note": "Derived from training evidence only. Held-out evaluation cases live elsewhere."
+}

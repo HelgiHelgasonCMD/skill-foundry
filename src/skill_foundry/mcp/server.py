@@ -21,11 +21,11 @@ def _dump(obj: Any) -> str:
 
 def build_server(settings: Settings) -> Any:
     try:
-        from mcp.server.fastmcp import FastMCP
+        from mcp.server.mcpserver import MCPServer
     except ImportError as exc:  # pragma: no cover - optional extra
         raise RuntimeError("install the 'mcp' extra: uv sync --extra mcp") from exc
     foundry = Foundry(settings)
-    server = FastMCP("skill-foundry (read-only)")
+    server = MCPServer("skill-foundry (read-only)")
 
     @server.tool()
     def list_candidates() -> str:
