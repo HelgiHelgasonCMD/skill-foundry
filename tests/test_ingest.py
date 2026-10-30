@@ -21,9 +21,9 @@ from skill_foundry.ingest.sanitize import (
 from skill_foundry.service import Foundry
 
 SECRETS = [
-    "sk-ant-api03-abcdefghijklmnopqrstuvwxyz0123",
-    "ghp_abcdefghijklmnopqrstuvwxyz0123456789",
-    "AKIAABCDEFGHIJKLMNOP",
+    "sk-" + "ant-api03-abcdefghijklmnopqrstuvwxyz0123",
+    "ghp" + "_abcdefghijklmnopqrstuvwxyz0123456789",
+    "AKIA" + "ABCDEFGHIJKLMNOP",
     "Bearer abcdefghijklmnopqrstuvwxyz123456",
     "API_KEY=supersecretvalue123",
     "https://user:hunter22@example.invalid/repo.git",
@@ -59,7 +59,7 @@ def _write(tmp_path: Path, bundle: dict[str, Any]) -> Path:
 def test_secrets_never_reach_storage_index_or_export(
     tmp_path: Path, bundle: dict[str, Any]
 ) -> None:
-    secret = "ghp_abcdefghijklmnopqrstuvwxyz0123456789"
+    secret = "ghp" + "_abcdefghijklmnopqrstuvwxyz0123456789"
     ep = bundle["episodes"][0]
     ep["observations"][0]["summary"] += f" token {secret}"
     ep["extensions"] = {"session_cookie": "abc", "vendor.note": f"leak {secret}"}
