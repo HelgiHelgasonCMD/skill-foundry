@@ -107,7 +107,7 @@ def exact_mcnemar(b: int, c: int) -> float:
     if n == 0:
         return 1.0
     k = min(b, c)
-    tail = sum(math.comb(n, i) for i in range(k + 1)) / 2**n
+    tail: float = sum(math.comb(n, i) for i in range(k + 1)) / 2**n
     return min(1.0, 2 * tail)
 
 

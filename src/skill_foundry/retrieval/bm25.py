@@ -8,12 +8,23 @@ Together this is Okapi BM25 over the indexed collection.
 
 from __future__ import annotations
 
+import re
 import zlib
 from collections import Counter
 
 from skill_foundry.util import tokens
 
-TOKENIZER_VERSION = "bm25-tok-v1"
+TOKENIZER_VERSION = "bm25-tok-v2"
+
+
+def terms(text: str) -> list[str]:
+    """Tokens plus their sub-parts, so 'nose-based' also matches 'nose'."""
+    out = []
+    for t in tokens(text):
+        out.append(t)
+        parts = [p for p in re.split(r"[-_.]", t) if p and p != t]
+        out.extend(parts)
+    return out
 
 
 def term_id(term: str) -> int:
@@ -28,10 +39,10 @@ class BM25Encoder:
 
     @staticmethod
     def doc_len(text: str) -> int:
-        return len(tokens(text))
+        return len(terms(text))
 
     def encode_doc(self, text: str) -> tuple[list[int], list[float]]:
-        toks = tokens(text)
+        toks = terms(text)
         dl = len(toks)
         tf = Counter(toks)
         weights: dict[int, float] = {}
@@ -44,5 +55,5 @@ class BM25Encoder:
 
     @staticmethod
     def encode_query(text: str) -> tuple[list[int], list[float]]:
-        idx = sorted({term_id(t) for t in tokens(text)})
+        idx = sorted({term_id(t) for t in terms(text)})
         return idx, [1.0] * len(idx)

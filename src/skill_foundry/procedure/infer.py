@@ -216,7 +216,7 @@ def infer_spec(
             DecisionBranch(
                 branch_id=f"b{i}",
                 condition=cond,
-                condition_basis=basis,  # type: ignore[arg-type]
+                condition_basis=basis,
                 steps=[make_step(sig, st, 1, prefix=f"b{i}.")],
                 support=sorted(st.exps),
                 needs_review=basis == "unresolved",

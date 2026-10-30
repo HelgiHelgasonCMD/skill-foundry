@@ -67,6 +67,9 @@ select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF", "S", "PTH", "TID"]
 ignore = ["S101", "S603", "S607", "RUF001", "RUF002", "RUF003", "PTH104", "PTH105", "PTH115",
           "S108", "S311", "S105"]
 
+[tool.ruff.lint.isort]
+known-first-party = ["skill_foundry", "conftest"]
+
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S", "PTH"]
 "alembic/**" = ["E501"]
@@ -78,8 +81,12 @@ plugins = ["pydantic.mypy"]
 files = ["src/skill_foundry"]
 
 [[tool.mypy.overrides]]
-module = ["fastembed.*", "anthropic.*", "mcp.*"]
+module = ["fastembed.*", "anthropic.*", "mcp.*", "skills_ref.*"]
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["skill_foundry.mcp.*"]
+disallow_untyped_decorators = false
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -258,10 +258,10 @@ class BwrapSandbox:
                 args += ["--ro-bind-try", etc, etc]
         args += ["--proc", "/proc", "--dev", "/dev", "--tmpfs", "/tmp", "--dir", "/tmp/home"]
         tool_dirs = toolchain_paths()
-        for p in [*tool_dirs, *self.extra_ro]:
-            args += ["--ro-bind", str(p), str(p)]
-        for link, resolved in symlinked_ancestors(tool_dirs):
-            args += ["--ro-bind", str(resolved), str(link)]
+        for tool in [*tool_dirs, *self.extra_ro]:
+            args += ["--ro-bind", str(tool), str(tool)]
+        for alias, resolved in symlinked_ancestors(tool_dirs):
+            args += ["--ro-bind", str(resolved), str(alias)]
         for name, host in policy.mounts_ro.items():
             args += ["--ro-bind", str(host.resolve()), f"/{name}"]
         for name, host in policy.mounts_rw.items():

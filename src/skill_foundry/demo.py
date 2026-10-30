@@ -90,9 +90,9 @@ def run_demo(
             f"received {rep.received}, accepted {rep.accepted}, rejected "
             f"{len(rep.rejected)}, quarantined {len(rep.quarantined)}"
         )
-        for q in rep.quarantined:
+        for qr in rep.quarantined:
             con.print(
-                f"  [yellow]quarantined[/yellow] {q['experience_id']}: {escape(q['reasons'][0])}"
+                f"  [yellow]quarantined[/yellow] {qr['experience_id']}: {escape(qr['reasons'][0])}"
             )
         record(
             "import",

@@ -62,7 +62,7 @@ def episode_to_experience(
             evidence_id=e["evidence_id"],
             kind=e["kind"],
             summary=e["summary"],
-            observed_at=_dt(e["observed_at"]),  # type: ignore[arg-type]
+            observed_at=_dt(e["observed_at"]),
             revision=e.get("revision"),
             exit_code=e.get("exit_code"),
             source_event_ids=list(e.get("source_event_ids", [])),

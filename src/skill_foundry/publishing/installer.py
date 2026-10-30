@@ -28,7 +28,7 @@ import uuid
 from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, Protocol
+from typing import Any
 
 from sqlalchemy import select
 
@@ -46,21 +46,24 @@ class PublishError(RuntimeError):
     pass
 
 
-class Publisher(Protocol):
+@dataclass(frozen=True)
+class Publisher:
+    """Where a package is placed inside a target project."""
+
     name: str
     skills_subdir: tuple[str, ...]
     note: str
 
 
 @dataclass(frozen=True)
-class ClaudeProjectPublisher:
+class ClaudeProjectPublisher(Publisher):
     name: str = "claude-project"
     skills_subdir: tuple[str, ...] = (".claude", "skills")
     note: str = "Claude Code project-local skills (.claude/skills/<name>/SKILL.md)"
 
 
 @dataclass(frozen=True)
-class AgentsDirPublisher:
+class AgentsDirPublisher(Publisher):
     """Adapter for agents that read ``.agents/skills``. Discovery and execution
     semantics differ between agents; this only places files, it does not promise
     identical behaviour."""
@@ -408,7 +411,7 @@ class Installer:
 
     # ------------------------------------------------------------------ recovery
     def pending(self) -> list[dict[str, Any]]:
-        out = []
+        out: list[dict[str, Any]] = []
         if not self.settings.installations_dir.exists():
             return out
         for j in sorted(self.settings.installations_dir.glob("*/*.json")):

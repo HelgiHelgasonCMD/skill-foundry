@@ -49,7 +49,7 @@ def lint_skill_dir(
     issues: list[ValidationIssue] = []
 
     def add(code: str, sev: str, msg: str, path: str | None = "SKILL.md") -> None:
-        issues.append(ValidationIssue(code=code, severity=sev, message=msg, path=path))  # type: ignore[arg-type]
+        issues.append(ValidationIssue(code=code, severity=sev, message=msg, path=path))
 
     text = (skill_dir / "SKILL.md").read_text(encoding="utf-8")
     fm, body, _ = split_frontmatter(text)

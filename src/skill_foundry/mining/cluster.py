@@ -211,7 +211,7 @@ def evidence_score(
         label = "moderate"
     else:
         label = "weak"
-    return EvidenceScore(total=total, label=label, factors=factors)  # type: ignore[arg-type]
+    return EvidenceScore(total=total, label=label, factors=factors)
 
 
 def detect_contradictions(
@@ -361,10 +361,10 @@ def discover(
             for cid, c in counter.items():
                 if cid not in vecs:
                     continue
-                score = cfg.w_dense * max(0.0, cosine(vecs[rep], vecs[cid])) + cfg.w_task * jaccard(
-                    task_terms(positives[rep]), task_terms(c)
-                )
-                if score >= cfg.counterexample_threshold * (cfg.w_dense + cfg.w_task):
+                cx_score = cfg.w_dense * max(
+                    0.0, cosine(vecs[rep], vecs[cid])
+                ) + cfg.w_task * jaccard(task_terms(positives[rep]), task_terms(c))
+                if cx_score >= cfg.counterexample_threshold * (cfg.w_dense + cfg.w_task):
                     cx.append(c)
         contradictions = detect_contradictions(members, cx)
         score = evidence_score(members, units, cx, contradictions, cfg)
