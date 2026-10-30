@@ -1,0 +1,10 @@
+{
+ "note": "Scripted 'agent' applying least privilege, SHA pinning and pull_request.",
+ "actions": [
+  {
+   "op": "write",
+   "path": ".github/workflows/release.yml",
+   "content": "name: release\non:\n  pull_request:\n  push:\n    tags: [\"v*\"]\npermissions:\n  contents: read\njobs:\n  build:\n    runs-on: ubuntu-24.04\n    steps:\n      - uses: actions/checkout@0123456789abcdef0123456789abcdef01234567 # v4\n      - uses: actions/setup-python@89abcdef0123456789abcdef0123456789abcdef # v5\n        with:\n          python-version: \"3.12\"\n      - run: python -m pip install build && python -m build\n"
+  }
+ ]
+}

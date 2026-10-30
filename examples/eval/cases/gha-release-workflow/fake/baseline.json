@@ -1,0 +1,4 @@
+{"note": "Scripted 'agent' that only adds a permissions block.",
+ "actions": [
+  {"op": "replace", "path": ".github/workflows/release.yml", "find": "jobs:\n", "replace": "permissions:\n  contents: read\njobs:\n"}
+ ]}

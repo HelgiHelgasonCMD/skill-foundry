@@ -1,0 +1,92 @@
+[project]
+name = "skill-foundry"
+version = "0.1.0"
+description = "Turn verified coding-agent experience into evidence-backed, evaluated, governed Agent Skills."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.12"
+authors = [{ name = "Helgi Helgason" }]
+keywords = ["agent-skills", "claude-code", "evaluation", "llm", "provenance"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Quality Assurance",
+]
+dependencies = [
+    "pydantic>=2.11,<3",
+    "sqlalchemy>=2.0.40,<2.2",
+    "alembic>=1.15,<2",
+    "typer>=0.15,<1",
+    "rich>=13.9",
+    "jinja2>=3.1.4,<4",
+    "jsonschema>=4.23,<5",
+    "pyyaml>=6.0.2,<7",
+    "qdrant-client>=1.15,<1.21",
+    "skills-ref>=0.1.1,<0.2",
+]
+
+[project.optional-dependencies]
+anthropic = ["anthropic>=0.60"]
+embeddings = ["fastembed>=0.7,<0.10"]
+mcp = ["mcp>=1.10"]
+
+[project.scripts]
+sf = "skill_foundry.cli.app:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "pytest-cov>=6",
+    "ruff>=0.12",
+    "mypy>=1.16",
+    "types-PyYAML",
+    "types-jsonschema",
+]
+
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/skill_foundry"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"schemas" = "skill_foundry/_schemas"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF", "S", "PTH", "TID"]
+# PTH104/105: os.rename/os.replace are used deliberately for their atomic POSIX semantics.
+# S108: "/tmp" paths refer to the sandbox's private tmpfs, not the host.
+# S311: random is used for seeded run-order shuffling, not cryptography.
+ignore = ["S101", "S603", "S607", "RUF001", "RUF002", "RUF003", "PTH104", "PTH105", "PTH115",
+          "S108", "S311", "S105"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S", "PTH"]
+"alembic/**" = ["E501"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+plugins = ["pydantic.mypy"]
+files = ["src/skill_foundry"]
+
+[[tool.mypy.overrides]]
+module = ["fastembed.*", "anthropic.*", "mcp.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+markers = [
+    "sandbox: needs bwrap or docker",
+    "qdrant_server: needs a running Qdrant server (QDRANT_URL)",
+    "fastembed: downloads an embedding model",
+    "docker: needs docker",
+]

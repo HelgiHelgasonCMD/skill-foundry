@@ -1,0 +1,5 @@
+{"note": "Scripted 'agent' that fixes the bug correctly without a skill (tie case).",
+ "actions": [
+  {"op": "replace", "path": "slugs/__init__.py", "find": "return re.sub(r\"[^a-z0-9]+\", \"-\", text)", "replace": "return re.sub(r\"[^a-z0-9]+\", \"-\", text).strip(\"-\")"},
+  {"op": "run", "argv": ["python", "-m", "pytest", "-q"]}
+ ]}

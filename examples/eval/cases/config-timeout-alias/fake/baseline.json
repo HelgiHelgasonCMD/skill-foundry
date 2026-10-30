@@ -1,0 +1,5 @@
+{"note": "Scripted 'agent' that coerces the type but forgets the renamed key.",
+ "actions": [
+  {"op": "replace", "path": "app/config.py", "find": "cfg[\"http_timeout_s\"] = env[\"HTTP_TIMEOUT_S\"]", "replace": "cfg[\"http_timeout_s\"] = int(env[\"HTTP_TIMEOUT_S\"])"},
+  {"op": "run", "argv": ["python", "-m", "pytest", "-q"]}
+ ]}

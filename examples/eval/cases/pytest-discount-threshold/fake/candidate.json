@@ -1,0 +1,6 @@
+{"note": "Scripted 'agent' that fixes the comparison in the source module.",
+ "actions": [
+  {"op": "run", "argv": ["python", "-m", "pytest", "-x", "-q"]},
+  {"op": "replace", "path": "pricing/__init__.py", "find": "if total > 100:", "replace": "if total >= 100:"},
+  {"op": "run", "argv": ["python", "-m", "pytest", "-q"]}
+ ]}

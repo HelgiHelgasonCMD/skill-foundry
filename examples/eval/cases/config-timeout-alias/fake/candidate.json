@@ -1,0 +1,6 @@
+{"note": "Scripted 'agent' restoring the old key as a deprecated alias and adding a test.",
+ "actions": [
+  {"op": "replace", "path": "app/config.py", "find": "    if \"HTTP_TIMEOUT_S\" in env:\n        cfg[\"http_timeout_s\"] = env[\"HTTP_TIMEOUT_S\"]", "replace": "    raw = env.get(\"HTTP_TIMEOUT_S\", env.get(\"REQUEST_TIMEOUT\"))  # deprecated alias\n    if raw is not None:\n        cfg[\"http_timeout_s\"] = int(raw)"},
+  {"op": "write", "path": "tests/test_config_alias.py", "content": "from app.config import load\n\n\ndef test_alias():\n    assert load({\"REQUEST_TIMEOUT\": \"5\"})[\"http_timeout_s\"] == 5\n"},
+  {"op": "run", "argv": ["python", "-m", "pytest", "-q"]}
+ ]}

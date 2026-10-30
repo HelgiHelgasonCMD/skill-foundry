@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/skill-foundry/schemas/eval-suite-v1.schema.json",
+  "title": "Skill Foundry evaluation suite v1",
+  "description": "Held-out evaluation tasks. Workspaces are given to the agent; hidden verifier assets are never placed in the agent workspace or the synthesis input.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "suite_id", "corpus_version", "tracks", "cases", "applicability_cases"],
+  "properties": {
+    "schema_version": { "const": "eval-suite.v1" },
+    "suite_id": { "type": "string", "minLength": 1 },
+    "corpus_version": { "type": "string", "minLength": 1 },
+    "description": { "type": "string" },
+    "tracks": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["capability_cases", "applicability_cases"],
+        "properties": {
+          "description": { "type": "string" },
+          "capability_cases": { "type": "array", "items": { "type": "string" } },
+          "applicability_cases": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "cases": { "type": "array", "items": { "$ref": "#/$defs/case" } },
+    "applicability_cases": { "type": "array", "items": { "$ref": "#/$defs/applicability" } }
+  },
+  "$defs": {
+    "case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["case_id", "lineage", "prompt", "workspace", "verifiers", "limits"],
+      "properties": {
+        "case_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+        "lineage": { "type": "string", "minLength": 1 },
+        "repo_id": { "type": ["string", "null"] },
+        "revision": { "type": ["string", "null"] },
+        "prompt": { "type": "string", "minLength": 1 },
+        "workspace": { "type": "string" },
+        "hidden": { "type": ["string", "null"] },
+        "verifiers": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/verifier" } },
+        "limits": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["timeout_s"],
+          "properties": {
+            "timeout_s": { "type": "number", "exclusiveMinimum": 0 },
+            "max_turns": { "type": "integer", "minimum": 1 },
+            "max_budget_usd": { "type": "number", "exclusiveMinimum": 0 }
+          }
+        },
+        "fake_scripts": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": { "baseline": { "type": "string" }, "candidate": { "type": "string" } }
+        }
+      }
+    },
+    "verifier": {
+      "type": "object",
+      "required": ["type", "id"],
+      "properties": {
+        "type": { "enum": ["pytest", "files", "yaml_constraints", "command"] },
+        "id": { "type": "string" },
+        "critical": { "type": "boolean" }
+      }
+    },
+    "applicability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["case_id", "task", "environment", "expected", "reason"],
+      "properties": {
+        "case_id": { "type": "string" },
+        "task": { "type": "string" },
+        "environment": {
+          "type": "object",
+          "properties": {
+            "runtime": { "type": ["string", "null"] },
+            "platform": { "type": ["string", "null"] },
+            "versions": { "type": "object", "additionalProperties": { "type": "string" } }
+          }
+        },
+        "signals": { "type": "array", "items": { "type": "string" } },
+        "expected": { "enum": ["use", "do_not_use"] },
+        "reason": { "type": "string" }
+      }
+    }
+  }
+}

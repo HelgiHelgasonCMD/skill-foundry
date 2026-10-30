@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/agent-experience/schemas/experience-bundle-v1.schema.json",
+  "title": "Agent Experience Bundle v1",
+  "description": "Portable, redacted, evidence-linked coding-agent experience interchange. The schema validates shape, not whether verification evidence is trustworthy.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "export_id", "episodes"],
+  "properties": {
+    "schema_version": { "const": "experience-bundle.v1" },
+    "export_id": { "type": "string", "minLength": 1 },
+    "exported_at": { "type": "string", "format": "date-time" },
+    "episodes": { "type": "array", "items": { "$ref": "#/$defs/episode" } },
+    "extensions": { "type": "object" }
+  },
+  "$defs": {
+    "episode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["episode_id", "task_summary", "environment", "observations", "attempts", "outcome", "lessons", "provenance"],
+      "properties": {
+        "episode_id": { "type": "string", "minLength": 1 },
+        "task_summary": { "type": "string", "minLength": 1 },
+        "environment": { "$ref": "#/$defs/environment" },
+        "observations": { "type": "array", "items": { "$ref": "#/$defs/observation" } },
+        "attempts": { "type": "array", "items": { "$ref": "#/$defs/attempt" } },
+        "outcome": { "$ref": "#/$defs/outcome" },
+        "lessons": { "type": "array", "items": { "$ref": "#/$defs/lesson" } },
+        "provenance": { "$ref": "#/$defs/provenance" },
+        "extensions": { "type": "object" }
+      }
+    },
+    "environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repo_id", "revision", "versions"],
+      "properties": {
+        "repo_id": { "type": ["string", "null"] },
+        "revision": { "type": ["string", "null"] },
+        "versions": { "type": "object", "additionalProperties": { "type": "string" } },
+        "runtime": { "type": ["string", "null"] },
+        "platform": { "type": ["string", "null"] },
+        "extensions": { "type": "object" }
+      }
+    },
+    "observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["observation_id", "kind", "summary", "source_event_ids"],
+      "properties": {
+        "observation_id": { "type": "string", "minLength": 1 },
+        "kind": { "type": "string", "minLength": 1 },
+        "summary": { "type": "string" },
+        "error_code": { "type": ["string", "null"] },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "source_event_ids": { "type": "array", "items": { "type": "string" } },
+        "extensions": { "type": "object" }
+      }
+    },
+    "attempt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["attempt_id", "action_summary", "status", "source_event_ids"],
+      "properties": {
+        "attempt_id": { "type": "string", "minLength": 1 },
+        "action_summary": { "type": "string" },
+        "status": { "enum": ["unknown", "failed", "completed"] },
+        "result_summary": { "type": ["string", "null"] },
+        "source_event_ids": { "type": "array", "items": { "type": "string" } },
+        "extensions": { "type": "object" }
+      }
+    },
+    "outcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "evidence"],
+      "properties": {
+        "status": { "enum": ["unknown", "claimed_success", "verified_success", "verified_failure"] },
+        "evidence": { "type": "array", "items": { "$ref": "#/$defs/evidence" } },
+        "extensions": { "type": "object" }
+      },
+      "allOf": [
+        { "if": { "properties": { "status": { "enum": ["verified_success", "verified_failure"] } }, "required": ["status"] },
+          "then": { "properties": { "evidence": { "minItems": 1 } } }
+        }
+      ]
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["evidence_id", "kind", "summary", "observed_at"],
+      "properties": {
+        "evidence_id": { "type": "string", "minLength": 1 },
+        "kind": { "enum": ["test", "ci", "command", "replay", "external_check", "other"] },
+        "summary": { "type": "string", "minLength": 1 },
+        "observed_at": { "type": "string", "format": "date-time" },
+        "revision": { "type": ["string", "null"] },
+        "exit_code": { "type": ["integer", "null"] },
+        "source_event_ids": { "type": "array", "items": { "type": "string" } },
+        "extensions": { "type": "object" }
+      }
+    },
+    "lesson": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["lesson_id", "problem", "observed_symptoms", "failed_approaches", "successful_approach", "preconditions", "contraindications", "versions", "verification_evidence_ids", "source_episode_ids", "confidence_basis"],
+      "properties": {
+        "lesson_id": { "type": "string", "minLength": 1 },
+        "problem": { "type": "string" },
+        "observed_symptoms": { "type": "array", "items": { "type": "string" } },
+        "failed_approaches": { "type": "array", "items": { "type": "string" } },
+        "successful_approach": { "type": ["string", "null"] },
+        "preconditions": { "type": "array", "items": { "type": "string" } },
+        "contraindications": { "type": "array", "items": { "type": "string" } },
+        "versions": { "type": "object", "additionalProperties": { "type": "string" } },
+        "verification_evidence_ids": { "type": "array", "items": { "type": "string" } },
+        "source_episode_ids": { "type": "array", "items": { "type": "string" } },
+        "confidence_basis": { "type": "string" },
+        "extensions": { "type": "object" }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "event_ids", "redaction_applied"],
+      "properties": {
+        "source": { "type": "string", "minLength": 1 },
+        "event_ids": { "type": "array", "items": { "type": "string" } },
+        "redaction_applied": { "type": "boolean" },
+        "extensions": { "type": "object" }
+      }
+    }
+  }
+}

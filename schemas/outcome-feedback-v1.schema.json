@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/skill-foundry/schemas/outcome-feedback-v1.schema.json",
+  "title": "Skill Foundry post-publication outcome feedback v1",
+  "description": "Outcomes of later agent runs. Only events that name the exact installed package hash are attributed to a skill version.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "feedback_id", "events"],
+  "properties": {
+    "schema_version": { "const": "outcome-feedback.v1" },
+    "feedback_id": { "type": "string", "minLength": 1 },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["event_id", "skill_name", "outcome", "observed_at", "task_summary"],
+        "properties": {
+          "event_id": { "type": "string", "minLength": 1 },
+          "skill_name": { "type": "string", "minLength": 1 },
+          "package_sha256": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" },
+          "skill_invoked": { "type": ["boolean", "null"] },
+          "outcome": { "enum": ["success", "failure"] },
+          "verified": { "type": "boolean" },
+          "failure_summary": { "type": ["string", "null"] },
+          "environment": {
+            "type": "object",
+            "properties": {
+              "runtime": { "type": ["string", "null"] },
+              "platform": { "type": ["string", "null"] },
+              "versions": { "type": "object", "additionalProperties": { "type": "string" } }
+            }
+          },
+          "observed_at": { "type": "string", "format": "date-time" },
+          "task_summary": { "type": "string" }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{"note": "Scripted 'agent' following the procedure: reproduce, fix source, re-run.",
+ "actions": [
+  {"op": "run", "argv": ["python", "-m", "pytest", "-x", "-q"]},
+  {"op": "replace", "path": "slugs/__init__.py", "find": "return re.sub(r\"[^a-z0-9]+\", \"-\", text)", "replace": "return re.sub(r\"[^a-z0-9]+\", \"-\", text).strip(\"-\")"},
+  {"op": "run", "argv": ["python", "-m", "pytest", "-q"]}
+ ]}

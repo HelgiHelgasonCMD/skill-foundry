@@ -1,0 +1,21 @@
+__pycache__/
+*.py[cod]
+.venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
+# Skill Foundry local state (registry, quarantine, installs, qdrant) — never commit
+.sf/
+.sf-*/
+*.db
+*.db-wal
+*.db-shm
+qdrant_storage/
+.env
+.claude/
+!examples/**/.claude/
