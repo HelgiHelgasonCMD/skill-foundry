@@ -64,14 +64,14 @@ def test_mcp_server_is_read_only(tmp_path: Path) -> None:
     assert not any(w in n for n in names for w in ("approve", "publish", "install", "rollback"))
 
 
-def test_cli_json_stays_parseable_with_stderr_merged(tmp_path: Path) -> None:
-    """Scheduled runs merge the streams, so shutdown must not print a traceback."""
+def test_cli_exits_without_a_shutdown_traceback(tmp_path: Path) -> None:
+    """Embedded Qdrant prints one if the client is still open at interpreter shutdown."""
     res = subprocess.run(
         [sys.executable, "-m", "skill_foundry.cli.app", "index", "status", "--json"],
         env={**os.environ, "SF_HOME": str(tmp_path / "sf")},
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
+        capture_output=True,
         text=True,
         check=True,
     )
     json.loads(res.stdout)
+    assert "Traceback" not in res.stderr
