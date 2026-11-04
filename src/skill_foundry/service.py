@@ -10,6 +10,7 @@ import difflib
 import json
 import shutil
 import sys
+import tempfile
 from datetime import timedelta
 from pathlib import Path
 from typing import Any, Literal
@@ -38,6 +39,7 @@ from skill_foundry.evaluation.applicability import evaluate_applicability
 from skill_foundry.evaluation.harness import CapabilityReport, run_capability
 from skill_foundry.evaluation.runners import AgentRunner
 from skill_foundry.evaluation.suite import EvalSuite
+from skill_foundry.ingest.hubris import bundle_for, scan_tasks
 from skill_foundry.ingest.labels import apply_label
 from skill_foundry.ingest.pipeline import IngestReport, ingest_file
 from skill_foundry.ingest.sanitize import redact_text
@@ -109,6 +111,22 @@ class Foundry:
         if sync_index:
             self.index.sync()
         return report
+
+    def import_hubris(self, repos: list[str], *, binary: str = "hubris") -> dict[str, Any]:
+        """Ingest finished hubris managed tasks from explicitly allowlisted repositories."""
+        known = {x.episode_id for x in self.registry.experiences(self.ws, include_quarantined=True)}
+        scan = scan_tasks(repos, known, binary)
+        out: dict[str, Any] = scan.to_dict()
+        if not scan.episodes:
+            return out
+        bundle = bundle_for(scan.episodes)
+        # The bundle is not sanitised until ingest, so it must not outlive this call.
+        self.settings.home.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=self.settings.home) as tmp:
+            path = Path(tmp) / f"{bundle['export_id']}.json"
+            path.write_text(json.dumps(bundle), encoding="utf-8")
+            out["ingest"] = self.ingest(path).to_dict()
+        return out
 
     def label(
         self, experience_id: str, key: str, value: str, author: str, reason: str

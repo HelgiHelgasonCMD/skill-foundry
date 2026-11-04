@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import atexit
 import json
 import os
 import sys
@@ -33,6 +34,7 @@ eval_app = typer.Typer(no_args_is_help=True, help="Applicability and capability 
 cand_app = typer.Typer(no_args_is_help=True, help="Candidate skill versions.")
 export_app = typer.Typer(no_args_is_help=True, help="Export skills or experiences.")
 fb_app = typer.Typer(no_args_is_help=True, help="Post-publication outcome feedback.")
+import_app = typer.Typer(no_args_is_help=True, help="Import experience from other tools.")
 app.add_typer(index_app, name="index")
 app.add_typer(hyp_app, name="hypothesis")
 app.add_typer(spec_app, name="spec")
@@ -40,6 +42,7 @@ app.add_typer(eval_app, name="eval")
 app.add_typer(cand_app, name="candidates")
 app.add_typer(export_app, name="export")
 app.add_typer(fb_app, name="feedback")
+app.add_typer(import_app, name="import")
 
 console = Console(highlight=False, soft_wrap=True)
 JsonOpt = Annotated[bool, typer.Option("--json", help="Machine-readable JSON output.")]
@@ -66,6 +69,8 @@ def _main(
 def foundry() -> Foundry:
     if "foundry" not in _state:
         _state["foundry"] = Foundry(_state["settings"])
+        # Close before interpreter shutdown, or embedded Qdrant prints a traceback to stderr.
+        atexit.register(_state["foundry"].close)
     f: Foundry = _state["foundry"]
     return f
 
@@ -217,6 +222,73 @@ def index_rebuild(as_json: JsonOpt = False) -> None:
     r = _run(foundry().index.rebuild)
     if not emit(r.__dict__, as_json):
         console.print(f"rebuilt: {r.processed} experiences indexed")
+
+
+# ---------------------------------------------------------------------------- hubris
+RepoOpt = Annotated[
+    list[str],
+    typer.Option(
+        "--repo",
+        help="Repository to import from: name, owner/name or full id. Repeatable. "
+        "Nothing is imported unless named.",
+    ),
+]
+HubrisBinOpt = Annotated[str, typer.Option("--hubris-bin", help="The hubris executable.")]
+
+
+@import_app.command("hubris")
+def import_hubris_cmd(
+    repo: RepoOpt, hubris_bin: HubrisBinOpt = "hubris", as_json: JsonOpt = False
+) -> None:
+    """Ingest finished hubris managed tasks from the named repositories."""
+    rep = _run(foundry().import_hubris, repo, binary=hubris_bin)
+    if not emit(rep, as_json):
+        console.print(f"new episodes: {len(rep['new_episodes'])}")
+        for key in ("already_imported", "not_allowlisted", "not_finished", "omitted_commands"):
+            console.print(f"  {key}: {rep[key]}")
+        console.print(f"  skipped_verdicts: {rep['skipped_verdicts']}")
+        if rep["missing_transcripts"]:
+            console.print(f"  [yellow]no transcript[/yellow]: {rep['missing_transcripts']}")
+        if "ingest" in rep:
+            console.print(f"  trust: {rep['ingest']['trust']}")
+
+
+@app.command("autopilot")
+def autopilot_cmd(
+    repo: RepoOpt,
+    suite: SuiteOpt = None,
+    hubris_bin: HubrisBinOpt = "hubris",
+    as_json: JsonOpt = False,
+) -> None:
+    """One unattended pass: import, index, discover, generate into quarantine, validate.
+
+    Never approves, publishes or runs a live evaluation. Without --suite it stops at the
+    ProcedureSpec. Runs SF_NOTIFY_CMD when something new needs you.
+    """
+    from skill_foundry.autopilot import run_pass
+
+    rep = _run(
+        run_pass,
+        foundry(),
+        repo,
+        suite_path=suite,
+        hubris_binary=hubris_bin,
+        notify_command=os.environ.get("SF_NOTIFY_CMD"),
+    )
+    if not emit(rep, as_json):
+        if "skipped" in rep:
+            console.print(f"skipped: {rep['skipped']}")
+            return
+        console.print(
+            f"imported {len(rep['import']['new_episodes'])} task(s); "
+            f"discovery {'ran' if rep['discovered'] else 'not needed'}"
+        )
+        for c in rep["new_candidates"]:
+            console.print(f"  candidate in quarantine: {c['ref']} (run `sf review {c['ref']}`)")
+        for name in rep["needs_suite"]:
+            console.print(f"  spec ready, needs an evaluation suite to generate: {name}")
+        for f in rep["failed"]:
+            console.print(f"  [red]failed[/red] {f['spec']}: {escape(f['error'])}")
 
 
 # ---------------------------------------------------------------------------- discover
@@ -424,11 +496,19 @@ def eval_capability(
         bool,
         typer.Option(
             "--i-understand-this-runs-a-live-agent",
-            help="Required for --runner claude-code: runs the real CLI, may cost money.",
+            help="Required for --runner claude-code: runs the real CLI and uses your quota or "
+            "API credit.",
         ),
     ] = False,
     pass_api_key: Annotated[
         bool, typer.Option(help="Pass ANTHROPIC_API_KEY into the sandbox.")
+    ] = False,
+    pass_oauth_token: Annotated[
+        bool,
+        typer.Option(
+            help="Pass CLAUDE_CODE_OAUTH_TOKEN (from `claude setup-token`) into the sandbox, "
+            "to run on a Claude subscription."
+        ),
     ] = False,
     as_json: JsonOpt = False,
 ) -> None:
@@ -446,7 +526,17 @@ def eval_capability(
                 "--runner claude-code executes the real Claude Code CLI; pass "
                 "--i-understand-this-runs-a-live-agent to opt in"
             )
-        r = _run(ClaudeCodeRunner, model=model, pass_api_key=pass_api_key)
+        if pass_oauth_token and not os.environ.get("CLAUDE_CODE_OAUTH_TOKEN"):
+            fail(
+                "--pass-oauth-token: CLAUDE_CODE_OAUTH_TOKEN is not set. "
+                "Run `claude setup-token` and export the token it prints."
+            )
+        r = _run(
+            ClaudeCodeRunner,
+            model=model,
+            pass_api_key=pass_api_key,
+            pass_oauth_token=pass_oauth_token,
+        )
     else:
         fail(f"unknown runner {runner}")
         return

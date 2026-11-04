@@ -86,6 +86,7 @@ _IMPERATIVE = {
     "re-ran": "Re-run",
     "reran": "Re-run",
     "ran": "Run",
+    "edited": "Edit",
     "inspected": "Inspect",
     "fixed": "Fix",
     "compared": "Compare",

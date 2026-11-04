@@ -50,8 +50,11 @@ The CLI needs network access and authentication. The live runner:
   boundary is **weaker** than the offline one.
 - uses a private empty `CLAUDE_CONFIG_DIR`, so host credentials and user skills are not
   visible.
-- passes `ANTHROPIC_API_KEY` only with `--pass-api-key`. OAuth/keychain logins are not
-  available inside the sandbox.
+- passes `ANTHROPIC_API_KEY` only with `--pass-api-key`, and `CLAUDE_CODE_OAUTH_TOKEN` (a
+  subscription token from `claude setup-token`) only with `--pass-oauth-token`. Your `/login`
+  credentials are not available inside the sandbox. A passed credential is readable by the agent
+  under test, and appears on bubblewrap's command line during the run. Its exact value is scrubbed
+  from stored traces.
 - restricts the agent to an allowlist (`Read Edit Write Glob Grep Skill` and specific
   `Bash(...)` patterns) and never uses `--dangerously-skip-permissions`.
 - requires `--i-understand-this-runs-a-live-agent`.

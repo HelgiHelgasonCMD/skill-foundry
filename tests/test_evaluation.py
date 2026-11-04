@@ -212,6 +212,42 @@ def test_claude_runner_isolates_arms(
     assert explicit[explicit.index("-p") + 1].startswith("/fix-failing-pytest-suite ")
 
 
+OAUTH_CLAUDE = """#!/bin/sh
+if [ "$1" = "--version" ]; then echo "9.9.9"; exit 0; fi
+printf '{"type":"system","subtype":"init","skills":[],"note":"%s"}\\n' "$CLAUDE_CODE_OAUTH_TOKEN"
+printf '{"type":"result","subtype":"success","num_turns":1}\\n'
+"""
+
+
+def test_oauth_token_reaches_the_run_but_never_the_trace(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    token = "opaque" + "-subscription-" + "credential"  # matches no redaction pattern
+    monkeypatch.setenv("CLAUDE_CODE_OAUTH_TOKEN", token)
+    binary = tmp_path / "fakebin" / "claude"
+    binary.parent.mkdir()
+    binary.write_text(OAUTH_CLAUDE)
+    binary.chmod(binary.stat().st_mode | stat.S_IEXEC)
+    sandbox = (
+        BwrapSandbox(extra_ro=[binary.parent])
+        if BwrapSandbox().available()
+        else UnsafeHostSandbox()
+    )
+
+    def run(*, passed: bool) -> str:
+        arm = tmp_path / ("with" if passed else "without")
+        runner = ClaudeCodeRunner(
+            binary=str(binary), kind="mock", sandbox=sandbox, pass_oauth_token=passed
+        )
+        result = runner.run(_task(arm, "baseline", None))
+        assert token not in json.dumps(result.__dict__, default=str)
+        return (arm / "baseline" / "run" / "trace.jsonl").read_text()
+
+    assert "[REDACTED:credential]" in run(passed=True)
+    assert "[REDACTED:credential]" not in run(passed=False)
+    assert token not in (tmp_path / "with" / "baseline" / "run" / "trace.jsonl").read_text()
+
+
 def test_contamination_is_refused(pipeline: dict[str, Any], tmp_path: Path) -> None:
     files = pipeline["foundry"].package(pipeline["version_id"])
     t = _task(tmp_path, "baseline", files)

@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import json
+import os
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -59,3 +62,16 @@ def test_mcp_server_is_read_only(tmp_path: Path) -> None:
     names = {t.name for t in asyncio.run(server.list_tools())}
     assert names == {"list_candidates", "list_hypotheses", "version_lineage", "evaluation_reports"}
     assert not any(w in n for n in names for w in ("approve", "publish", "install", "rollback"))
+
+
+def test_cli_json_stays_parseable_with_stderr_merged(tmp_path: Path) -> None:
+    """Scheduled runs merge the streams, so shutdown must not print a traceback."""
+    res = subprocess.run(
+        [sys.executable, "-m", "skill_foundry.cli.app", "index", "status", "--json"],
+        env={**os.environ, "SF_HOME": str(tmp_path / "sf")},
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        check=True,
+    )
+    json.loads(res.stdout)
