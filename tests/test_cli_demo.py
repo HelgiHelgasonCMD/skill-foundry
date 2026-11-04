@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import json
+import os
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -59,3 +62,16 @@ def test_mcp_server_is_read_only(tmp_path: Path) -> None:
     names = {t.name for t in asyncio.run(server.list_tools())}
     assert names == {"list_candidates", "list_hypotheses", "version_lineage", "evaluation_reports"}
     assert not any(w in n for n in names for w in ("approve", "publish", "install", "rollback"))
+
+
+def test_cli_exits_without_a_shutdown_traceback(tmp_path: Path) -> None:
+    """Embedded Qdrant prints one if the client is still open at interpreter shutdown."""
+    res = subprocess.run(
+        [sys.executable, "-m", "skill_foundry.cli.app", "index", "status", "--json"],
+        env={**os.environ, "SF_HOME": str(tmp_path / "sf")},
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    json.loads(res.stdout)
+    assert "Traceback" not in res.stderr

@@ -56,7 +56,7 @@ Status dimensions are stored *separately* from the lifecycle state: `spec_compli
 |---|---|
 | `domain/` | Pydantic domain models, lifecycle state machine, promotion policy (no persistence) |
 | `contracts/` | experience-bundle.v1 validation, referential integrity, conversion, export |
-| `ingest/` | limits, sanitisation, injection screening, trust qualification, labels, pipeline |
+| `ingest/` | limits, sanitisation, injection screening, trust qualification, labels, pipeline, hubris task import |
 | `registry/` | SQLAlchemy ORM (separate from domain), Alembic migrations, repositories |
 | `retrieval/` | `EmbeddingProvider` (hashing, FastEmbed), BM25 encoder, Qdrant index + outbox |
 | `mining/` | features, lineage/independence/split, constrained complete-linkage discovery |
@@ -68,6 +68,7 @@ Status dimensions are stored *separately* from the lifecycle state: `spec_compli
 | `publishing/` | `Publisher` (claude-project, agents-dir), journaled installer, rollback |
 | `monitoring/` | feedback attribution, regression detection, revision proposals |
 | `service.py` | use cases shared by CLI, demo and MCP |
+| `autopilot.py` | one unattended pass up to quarantine; no route to approval or publication |
 | `cli/`, `mcp/` | Typer CLI (`--json` everywhere), read-only MCP server |
 
 ## Interfaces

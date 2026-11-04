@@ -31,8 +31,11 @@ ingest ─► qualify evidence ─► hybrid retrieval ─► constrained cluste
 | Journaled publish, crash recovery, byte-exact rollback, drift detection | **Implemented and tested** |
 | bubblewrap sandbox (no network, no `$HOME`, read-only inputs, rlimits) | **Tested locally**; Docker backend tested in CI |
 | Anthropic-backed synthesiser + claim checker | **Tested only with a mocked client** |
-| Claude Code runner (isolated skill loading via `--add-dir`, stream-json parsing, contamination checks) | **Tested only with a mock `claude` executable.** Real CLI skill discovery is **UNVERIFIED** |
-| Live synthesis / live agent benchmark | **Requires credentials**: see [docs/live-benchmark.md](docs/live-benchmark.md) |
+| Claude Code runner (isolated skill loading via `--add-dir`, stream-json parsing, contamination checks) | Real CLI **lists the skill in the candidate arm only** (checked with no credentials, so no model request). Whether the model **invokes** it is **UNVERIFIED** |
+| hubris managed tasks as a source of experience, `sf autopilot` up to quarantine | **Tested with a fake hubris CLI**; import also run on one real task. See [docs/hubris.md](docs/hubris.md) |
+| Agent Flight Recorder bundles | **Rejected today**: AFR's schema differs. See [docs/interoperability.md](docs/interoperability.md) |
+| Live agent benchmark | **Needs a Claude subscription token or API key**: see [docs/live-benchmark.md](docs/live-benchmark.md) |
+| Live synthesis (`AnthropicSynthesizer`) | **Needs an API key.** The default template synthesiser needs none |
 | **Measured improvement of a real agent from a generated skill** | **NOT MEASURED. No such result exists.** |
 
 The offline demo proves **pipeline correctness with fixtures**. Its "capability"
@@ -49,7 +52,7 @@ or Docker.
 git clone https://github.com/HelgiHelgasonCMD/skill-foundry && cd skill-foundry
 uv sync
 uv run sf demo                  # full offline pipeline in a fresh temp directory
-uv run pytest -q                # 118 tests (+4 that need CI services)
+uv run pytest -q                # 150 tests (+4 that need CI services)
 ```
 
 Step by step against your own state directory:
@@ -76,7 +79,10 @@ uv run sf rollback --version fix-failing-pytest-suite@0.1.0                     
 Every command accepts `--json`. Other commands: `sf doctor`, `sf experiences`,
 `sf label`, `sf index status|sync|rebuild`, `sf candidates list`, `sf versions`,
 `sf diff`, `sf compare <run-id>`, `sf installations`, `sf export skill|experiences`,
-`sf feedback ingest|status`, `sf propose-revision`, `sf mcp` (read-only MCP server).
+`sf feedback ingest|status`, `sf propose-revision`, `sf import hubris`, `sf autopilot`,
+`sf mcp` (read-only MCP server).
+
+To run this on your real work through [hubris](docs/hubris.md), see that page.
 
 ## Sample output
 
@@ -129,14 +135,14 @@ More detail:
 - [docs/security.md](docs/security.md): trust model, sandbox limits, destructive actions
 - [docs/interoperability.md](docs/interoperability.md): the experience-bundle.v1 contract
 - [docs/live-benchmark.md](docs/live-benchmark.md)
+- [docs/hubris.md](docs/hubris.md): real experience from hubris managed tasks, on a schedule
 - [docs/decisions.md](docs/decisions.md): tradeoffs, MVP vs later
 
 ## Limitations (honest list)
 
-- **No live capability result.** The live harness exists and is tested against a mock CLI only.
-- **Real Claude Code skill loading is unverified.** Whether the real CLI discovers a skill
-  from `--add-dir` under this isolation is unknown until a live run records the
-  `discoverable` and `invoked` observations.
+- **No live capability result.** No paired run has completed against the real model.
+- **Skill invocation is unverified.** The real CLI lists a skill exposed through `--add-dir`,
+  but whether the model invokes it is unknown until an authenticated run records `invoked`.
 - **The default embedder is lexical** (feature hashing) so tests and the demo are
   deterministic and offline. Use `--embedding fastembed` for semantic retrieval.
 - **Command extraction is heuristic.** The contract has no structured command field, so

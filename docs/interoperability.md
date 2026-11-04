@@ -1,16 +1,28 @@
 # Interoperability: experience-bundle.v1
 
-`schemas/experience-bundle-v1.schema.json` is the **canonical cross-repository contract**
-shared with Agent Flight Recorder (AFR). It was supplied with the project
-specification and is stored **byte-for-byte**:
+`schemas/experience-bundle-v1.schema.json` is the **canonical contract** for importing
+experience. It was supplied with the project specification and is stored
+**byte-for-byte**:
 
 ```
 sha256 6d649ed25c144a64c1be77fe696500b0f8865763cc71fc107ae2bee54298fc36
 ```
 
 `tests/test_contract.py::test_canonical_schema_is_pinned_verbatim` fails if the file changes.
-Skill Foundry has no runtime, package, database or API dependency on AFR. The JSON
-file is the only coupling.
+
+## Agent Flight Recorder does not conform yet
+
+Agent Flight Recorder (AFR) ships a **different schema under the same version string**.
+Its `schemas/experience-bundle-v1.schema.json` (sha256 `7f9371b8…`) requires `created_at`,
+`producer` and `redaction` on the envelope, and its observations, attempts and environment
+have different fields. Checked against both files:
+
+- an empty AFR envelope is rejected by this schema (`created_at`, `producer` and `redaction`
+  are unexpected);
+- this repository's demo bundle produces 927 errors against AFR's schema.
+
+So `sf ingest` rejects every AFR export today. Making them work needs a canonical exporter in
+AFR. Until then, use [hubris managed tasks](hubris.md) as the source of real experience.
 
 ## Shape (normative: see the schema)
 

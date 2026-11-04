@@ -230,6 +230,7 @@ class ClaudeCodeRunner:
         allowed_tools: tuple[str, ...] = DEFAULT_ALLOWED_TOOLS,
         bare: bool = False,
         pass_api_key: bool = False,
+        pass_oauth_token: bool = False,
         permission_mode: str = "acceptEdits",
     ):
         found = binary or shutil.which("claude")
@@ -241,6 +242,7 @@ class ClaudeCodeRunner:
         self.allowed_tools = allowed_tools
         self.bare = bare
         self.pass_api_key = pass_api_key
+        self.pass_oauth_token = pass_oauth_token
         self.permission_mode = permission_mode
         self.sandbox = sandbox or BwrapSandbox(extra_ro=[Path(self.binary).parent])
 
@@ -316,15 +318,25 @@ class ClaudeCodeRunner:
         )
         policy.env["CLAUDE_CONFIG_DIR"] = self.sandbox.mount_point("claude-config", policy)
         policy.env["DISABLE_AUTOUPDATER"] = "1"
-        if self.pass_api_key and os.environ.get("ANTHROPIC_API_KEY"):
-            policy.env["ANTHROPIC_API_KEY"] = os.environ["ANTHROPIC_API_KEY"]
+        secrets: list[str] = []
+        for wanted, var in (
+            (self.pass_api_key, "ANTHROPIC_API_KEY"),
+            (self.pass_oauth_token, "CLAUDE_CODE_OAUTH_TOKEN"),
+        ):
+            value = os.environ.get(var)
+            if wanted and value:
+                policy.env[var] = value
+                secrets.append(value)
         mp = self.sandbox.mount_point("skillroot", policy) if installed else None
         argv = self.build_argv(task, mp)
         res = self.sandbox.run(argv, policy)
         trace_path = task.run_dir / "trace.jsonl"
-        trace_path.write_text(redact_text(res.stdout), encoding="utf-8")
+        stdout = res.stdout
+        for secret in secrets:  # exact-value scrub: regex detectors may miss a token format
+            stdout = stdout.replace(secret, "[REDACTED:credential]")
+        trace_path.write_text(redact_text(stdout), encoding="utf-8")
         # Parse with the candidate's name in both arms so baseline contamination is visible.
-        parsed = parse_stream(res.stdout, task.skill_name)
+        parsed = parse_stream(stdout, task.skill_name)
         status = parsed.pop("status")
         if res.timed_out:
             status = "timeout"
